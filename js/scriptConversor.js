@@ -16,6 +16,15 @@ const valoresConversao = {
     }
 }
 
+const botaoaceitaMensagem = document.getElementById('botao-aceita-mensagem')
+
+botaoaceitaMensagem.addEventListener('click', () => {
+
+    const mensagemUsuario = document.getElementById('mensagem-usuario');
+
+    mensagemUsuario.style.display = 'none';
+})
+
 const botaoInverter = document.getElementById("botao-inverter");
 botaoInverter.addEventListener("click", inverter);
 
@@ -27,6 +36,13 @@ botaoLimpar.addEventListener("click", limpar);
 
 let valorUsuario = document.getElementById("valorEntrada");
 valorUsuario.addEventListener("keypress", function (event) {
+
+    console.log(event)
+
+    if(event.ctrlKey == true && event.key == "L") {
+        event.preventDefault();
+        limpar()
+    }
 
     if(event.ctrlKey == true && event.code == "KeyI"){
         event.preventDefault();
