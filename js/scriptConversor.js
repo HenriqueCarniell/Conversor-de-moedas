@@ -1,109 +1,153 @@
-const valoresConversao = {
-    real: {
-        euro: 0.19,
-        dolar: 0.20,
-        simbolo: "R$"
-    },
-    dolar: {
-        real: 4.99,
-        euro: 0.92,
-        simbolo: "US$"
-    },
-    euro: {
-        real: 5.40,
-        dolar: 1.08,
-        simbolo: "€"
-    }
-}
-
-const botaoaceitaMensagem = document.getElementById('botao-aceita-mensagem')
-
-botaoaceitaMensagem.addEventListener('click', () => {
-
-    const mensagemUsuario = document.getElementById('mensagem-usuario');
-
-    mensagemUsuario.style.display = 'none';
-})
-
-const botaoInverter = document.getElementById("botao-inverter");
-botaoInverter.addEventListener("click", inverter);
-
-const botaoConverter = document.getElementById("botao-converter");
+let botaoConverter = document.getElementById("botao-converter");
 botaoConverter.addEventListener("click", converter);
 
-const botaoLimpar = document.getElementById("botao-limpar");
+let botaoLimpar = document.getElementById("botao-limpar");
 botaoLimpar.addEventListener("click", limpar);
 
-let valorUsuario = document.getElementById("valorEntrada");
-valorUsuario.addEventListener("keypress", function (event) {
+let botaoInverter = document.getElementById("botao-inverter");
+botaoInverter.addEventListener("click", inverter);
 
-    console.log(event)
+let botaoAceitaMensagem = document.getElementById("botao-aceita-mensagem");
+botaoAceitaMensagem.addEventListener("click", aceitaMensagem);
 
-    if(event.ctrlKey == true && event.key == "L") {
-        event.preventDefault();
-        limpar()
+if(localStorage.getItem("aceitouCookie") == "1") {
+    aceitaMensagem();
+}
+
+function salvaResultadoNoHistorico(conversao) {
+    let historico = recuperaHistoricoDeConversoes();
+
+    historico.push(conversao);
+
+    historico = JSON.stringify(historico);
+    localStorage.setItem("historico", historico);
+}
+
+function recuperaHistoricoDeConversoes() {
+    let historico = localStorage.getItem("historico");
+
+    if(!historico) {
+        return [];
     }
+    let historicoConvertido = JSON.parse(historico);
+    return historicoConvertido;
+}
 
-    if(event.ctrlKey == true && event.code == "KeyI"){
-        event.preventDefault();
+function aceitaMensagem() {
+    let divMensagemUsuario = document.getElementById("container-mensagem-usuario");
+    divMensagemUsuario.classList.add("oculto");
+
+    localStorage.setItem("aceitouCookie", "1");
+}
+
+
+let valorUsuario = document.getElementById("valor-usuario");
+valorUsuario.addEventListener("keypress", function(event) {
+
+    //console.log(event);
+
+    if(event.ctrlKey == true && event.code == "KeyI") {
         inverter();
     }
 
-    if(event.ctrlKey == true && event.code == "KeyL"){
-        event.preventDefault();
+    if(event.ctrlKey == true && event.code == "KeyL") {
         limpar();
     }
 
-
-    if (event.key == "Enter") {
-        event.preventDefault();
+    if(event.key == "Enter") {
         converter();
     }
+
 });
 
 
-function converter() {
-    let valorUsuario = document.getElementById("valorEntrada").value
+function limpar() {
+    let valorUsuario = document.getElementById("valor-usuario");
+    let resultado = document.getElementById("resultado");
 
-    if (valorUsuario <= 0) {
-        alert("Valor não suportado");
-        return;
-    }
-
-    let moeda1 = document.getElementById("moeda1").value
-    let moeda2 = document.getElementById("moeda2").value
-
-    if (moeda1 == moeda2) {
-        alert("As moedas são iguais !!");
-        return;
-    }
-
-
-    let simbolo = valoresConversao[moeda2]["simbolo"];
-    //console.log(simbolo);
-
-
-    let resultado = valorUsuario * valoresConversao[moeda1][moeda2];
-    console.log(resultado);
-
-    let paragrafoResultado = document.getElementById("resultado")
-    paragrafoResultado.textContent = simbolo + " " + resultado.toFixed(2);
-
+    valorUsuario.value = "";
+    resultado.textContent = "";
 }
 
-function limpar() {
-    let paragrafoResultado = document.getElementById("resultado");
-    paragrafoResultado.textContent = "";
+function buscaAPI(moedaOrigem="USD", moedaDestino="BRL") {
+    
+    console.log(moedaOrigem);
+    console.log(moedaDestino);
 
-    let valorEntrada = document.getElementById("valorEntrada");
-    valorEntrada.value = "";
+    let parametro = moedaOrigem + "-" + moedaDestino;
+    let url = "https://economia.awesomeapi.com.br/json/last/" + parametro;
 
+    console.log(url);
+
+    return fetch(url).then(function(data){
+        if(data.status == 200) {
+            console.log("Retorno código 200 API!");
+        }
+        return data.json();
+    }).then(function(response){
+        return response[moedaOrigem + moedaDestino];
+    }).catch();
+}
+
+
+function converter() {
+    let valorUsuario = document.getElementById("valor-usuario").value;
+
+    let moedaOrigem  = document.getElementById("moeda1").value;
+    let moedaDestino = document.getElementById("moeda2").value;
+
+    if(valorUsuario == "") {
+        alert("Valor não pode ser vazio!");
+        return;
+    }
+
+    if(valorUsuario < 0) {
+        alert("Valor não pode ser negativo");
+        return;
+    }
+
+    if(moedaOrigem == moedaDestino) {
+        alert("As moedas são iguais, não é possível converter");
+        return;
+    }
+
+    buscaAPI(moedaOrigem, moedaDestino).then(function(data){
+        let conversao = valorUsuario * data["ask"];
+
+        let simbolo = "";
+        if (moedaDestino == "BRL") {
+            simbolo = "R$";
+        }
+        if (moedaDestino == "USD") {
+            simbolo = "US$"
+        }
+        if (moedaDestino == "EUR") {
+            simbolo = "€";
+        }
+        if (moedaDestino == "GBP") {
+            simbolo = "£";
+        }
+
+        
+        let resultado = document.getElementById("resultado");
+        resultado.textContent = simbolo + " " + conversao.toFixed(2);
+
+        let resultadoDaConversao = {
+            valor: valorUsuario,
+            moeda1: moedaOrigem,
+            moeda2: moedaDestino,
+            resultado: conversao
+        }
+        salvaResultadoNoHistorico(resultadoDaConversao);
+
+    });    
 }
 
 function inverter() {
-    let valorMoeda1 = document.getElementById("moeda1").value;
-    let valorMoeda2 = document.getElementById("moeda2").value;
+    let moeda1 = document.getElementById("moeda1").value;
+    let moeda2 = document.getElementById("moeda2").value;
 
-    document.getElementById("moeda1").value = valorMoeda2;
-    document.getElementById("moeda2").value = valorMoeda1;
+
+    document.getElementById("moeda1").value = moeda2;
+    document.getElementById("moeda2").value = moeda1;
 }
