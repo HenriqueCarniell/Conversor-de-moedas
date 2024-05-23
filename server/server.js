@@ -31,16 +31,15 @@ app.get('/conversao/:moedas', (req, res) => {
     let moeda1 = moedas[0];
     let moeda2 = moedas[1];
 
-    console.log(moeda1)
-    console.log(moeda2)
+
 
     //Fazer a conversão no backend e retornar no front end
 
-    fetch(`https://economia.awesomeapi.com.br/json/last/${moeda1+"-"+moeda2}`)
+    fetch(`https://economia.awesomeapi.com.br/json/last/${moeda1+"-"+ moeda2}`)
         .then(response => response.json())
         .then(data => {
-            console.log(data.BRLUSD.ask)
-            res.status(200).json(data.BRLUSD.ask);
+            console.log(data[moeda1+moeda2].ask)
+            res.status(200).json(data);
         })
 
 })
