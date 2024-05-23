@@ -24,20 +24,25 @@ app.get("/moeda", (req, res) => {
     res.status(200).json(moedas);
 });
 
-app.get('/conversao/:moedas', (req,res) => {
+app.get('/conversao/:moedas', (req, res) => {
+
     //processo de conversão
-    let moedas = req.params.moedas.split("-")
-    let moeda1 = moedas[0]
-    let moeda2 = moedas[1]
-    
+    let moedas = req.params.moedas.split("-");
+    let moeda1 = moedas[0];
+    let moeda2 = moedas[1];
+
     console.log(moeda1)
     console.log(moeda2)
 
-    conversao = {};
-
     //Fazer a conversão no backend e retornar no front end
 
-    res.status(200).json(conversao);
+    fetch(`https://economia.awesomeapi.com.br/json/last/${moeda1+"-"+moeda2}`)
+        .then(response => response.json())
+        .then(data => {
+            console.log(data.BRLUSD.ask)
+            res.status(200).json(data.BRLUSD.ask);
+        })
+
 })
 
 app.listen(porta, () => {
