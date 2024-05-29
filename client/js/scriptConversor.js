@@ -69,24 +69,21 @@ function limpar() {
     resultado.textContent = "";
 }
 
-function buscaAPI(moedaOrigem="USD", moedaDestino="BRL") {
-    
-    console.log(moedaOrigem);
-    console.log(moedaDestino);
-
+function buscaAPI(moedaOrigem = "USD", moedaDestino = "BRL") {
     let parametro = moedaOrigem + "-" + moedaDestino;
-    let url = "https://economia.awesomeapi.com.br/json/last/" + parametro;
+    let url = "http://localhost:4000/conversao/" + parametro;
 
-    console.log(url);
-
-    return fetch(url).then(function(data){
-        if(data.status == 200) {
-            console.log("Retorno código 200 API!");
-        }
-        return data.json();
-    }).then(function(response){
-        return response[moedaOrigem + moedaDestino];
-    }).catch();
+    return fetch(url)
+        .then((data) => {
+            if (data.status === 200) {
+                console.log("Retorno código 200 da API!");
+            }
+            return data.json();
+        })
+        .catch((error) => {
+            console.error("Erro na chamada da API:", error);
+            return {};
+        });
 }
 
 
